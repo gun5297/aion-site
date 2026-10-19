@@ -1,0 +1,37 @@
+---
+import SectionTitle from './SectionTitle.astro';
+
+/**
+ * Page section: owns the <section>, container, title wiring and tone.
+ * - layout "rail": title in the left rail, slot in the content column
+ * - layout "head": title (and optional intro) above full-width slot content
+ * - layout "none": slot renders everything, including its own <SectionTitle id={`${id}-title`}>
+ */
+interface Props {
+  id: string;
+  label: string;
+  heading: string;
+  layout?: 'rail' | 'head' | 'none';
+  /** "sub" puts the section on the light-grey ground; panels inside flip to white. */
+  tone?: 'base' | 'sub';
+  intro?: string;
+  class?: string;
+  innerClass?: string;
+}
+
+const { id, label, heading, layout = 'rail', tone = 'base', intro, class: className, innerClass } = Astro.props;
+const titleId = `${id}-title`;
+---
+
+<section id={id} class:list={['section', { 'section--sub': tone === 'sub' }, className]} aria-labelledby={titleId}>
+  <div class:list={['container', { rail: layout === 'rail' }, innerClass]}>
+    {layout === 'rail' && <SectionTitle id={titleId} label={label} heading={heading} />}
+    {layout === 'head' && (
+      <div class="section-head">
+        <SectionTitle id={titleId} label={label} heading={heading} />
+        {intro && <p class="section-intro">{intro}</p>}
+      </div>
+    )}
+    <slot />
+  </div>
+</section>

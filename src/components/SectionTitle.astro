@@ -1,0 +1,19 @@
+---
+/**
+ * Bilingual section heading in the Japanese corporate convention:
+ * a large English label with the localized heading beneath it.
+ * The English label is decorative for assistive tech; the localized text is the name.
+ */
+interface Props {
+  id: string;
+  label: string;
+  heading: string;
+}
+
+const { id, label, heading } = Astro.props;
+---
+
+<h2 id={id} class="section-title">
+  <span class="section-en" lang="en" aria-hidden="true">{label}</span>
+  <span class="section-local">{heading}</span>
+</h2>

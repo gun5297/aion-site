@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.astro/
+.impeccable/review/
+.impeccable/research/
+
+# Internal working notes and design-tool state; kept locally, not published.
+PRODUCT.md
+DESIGN.md
+PHOTO-CREDITS.md
+.impeccable/
+public/images/*.webp.json

@@ -1,0 +1,256 @@
+---
+import LangSwitch from './LangSwitch.astro';
+import Section from './Section.astro';
+import SectionTitle from './SectionTitle.astro';
+import { content, mapQuery, type Lang } from '../i18n/content';
+import { withBase } from '../lib/url';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = content[lang];
+const hasNews = t.news.items.length > 0;
+const dotDate = (iso: string) => iso.replaceAll('-', '.');
+const pad = (n: number) => String(n).padStart(2, '0');
+// Korean needs a word space where the desktop line break falls; Japanese must not get one.
+const lines = (text: string) =>
+  text.split('\n').map((line, i, all) => line + (lang === 'ko' && i < all.length - 1 ? ' ' : ''));
+const asset = (file: string) => withBase(`/images/${file}`);
+const img = (name: string) => ({
+  src: asset(`${name}-800.webp`),
+  srcset: `${asset(`${name}-800.webp`)} 800w, ${asset(`${name}-1600.webp`)} 1600w`,
+});
+const home = withBase(t.path);
+
+// News sits right under the hero, so only the footer sitemap lists it.
+const headerNav = [
+  { href: '#about', label: t.nav.about },
+  { href: '#message', label: t.nav.message },
+  { href: '#business', label: t.nav.business },
+  { href: '#flow', label: t.nav.flow },
+  { href: '#company', label: t.nav.company },
+  { href: '#access', label: t.nav.access },
+];
+const footerNav = hasNews ? [{ href: '#news', label: t.nav.news }, ...headerNav] : headerNav;
+const mapQ = encodeURIComponent(mapQuery);
+const mapEmbed = `https://www.google.com/maps?q=${mapQ}&z=16&hl=${t.htmlLang}&output=embed`;
+const mapLink = `https://www.google.com/maps/search/?api=1&query=${mapQ}`;
+---
+
+<a class="skip" href="#main">{t.skip}</a>
+
+<header class="site-header" data-header>
+  <div class="header-inner">
+    <a class="logo" href={home}>
+      <span class="logo-mark">AION</span>
+      <span class="logo-name">{t.footer.name}</span>
+    </a>
+
+    <button
+      class="menu-toggle"
+      type="button"
+      aria-expanded="false"
+      aria-controls="global-nav"
+      data-open-label={t.nav.open}
+      data-close-label={t.nav.close}
+      data-menu-toggle
+    >
+      <span class="menu-icon" aria-hidden="true"></span>
+      <span class="visually-hidden" data-menu-label>{t.nav.open}</span>
+    </button>
+
+    <div class="global-nav" id="global-nav" data-menu>
+      <nav aria-label={t.nav.label}>
+        <ul class="nav-list">
+          {headerNav.map((item) => (
+            <li><a href={item.href}>{item.label}</a></li>
+          ))}
+        </ul>
+      </nav>
+      <LangSwitch lang={lang} />
+    </div>
+  </div>
+</header>
+
+<main id="main">
+  <section class="hero" aria-labelledby="hero-title">
+    <picture>
+      <source
+        media="(max-aspect-ratio: 1/1)"
+        srcset={`${asset('hero-portrait-800.webp')} 800w, ${asset('hero-portrait-1200.webp')} 1200w`}
+        sizes="100vw"
+        width="1200"
+        height="1600"
+      />
+      <img
+        class="hero-image"
+        src={asset('hero-1200.webp')}
+        srcset={`${asset('hero-1200.webp')} 1200w, ${asset('hero-2000.webp')} 2000w`}
+        sizes="100vw"
+        alt={t.hero.alt}
+        width="2000"
+        height="1500"
+        fetchpriority="high"
+      />
+    </picture>
+    <div class="hero-inner container">
+      <h1 id="hero-title" class="hero-title">
+        {t.hero.title.map((line) => <span>{line}</span>)}
+      </h1>
+      <p class="hero-en" lang="en">{t.hero.en}</p>
+    </div>
+    <a class="scroll-cue" href={hasNews ? '#news' : '#about'} lang="en">
+      <span>SCROLL</span>
+    </a>
+  </section>
+
+  {hasNews && (
+    <Section id="news" class="news" label={t.news.label} heading={t.news.heading}>
+      <ul class="news-list">
+        {t.news.items.map((item) => (
+          <li class="news-item">
+            <time datetime={item.date}>{dotDate(item.date)}</time>
+            <span class="tag">{item.category}</span>
+            <p class="news-title">{item.title}</p>
+          </li>
+        ))}
+      </ul>
+    </Section>
+  )}
+
+  <Section id="about" tone="sub" layout="none" innerClass="about-inner" label={t.about.label} heading={t.about.heading}>
+    <div class="about-text">
+      <SectionTitle id="about-title" label={t.about.label} heading={t.about.heading} />
+      <p class="statement">{lines(t.about.statement).map((line) => <span>{line}</span>)}</p>
+      <p class="body-text">{t.about.body}</p>
+    </div>
+    <figure class="about-figure">
+      <img {...img('building')} sizes="(min-width: 1334px) 600px, (min-width: 960px) 45vw, 100vw" alt={t.about.alt} width="1600" height="1067" loading="lazy" />
+    </figure>
+  </Section>
+
+  <Section id="message" label={t.message.label} heading={t.message.heading}>
+    <div class="message-body">
+      <p class="message-title">{t.message.title}</p>
+      {t.message.paragraphs.map((p) => <p class="body-text">{p}</p>)}
+      <p class="signature">
+        <span class="signature-company">{t.message.company}</span>
+        {t.message.signers.map((s) => <span>{s}</span>)}
+      </p>
+    </div>
+  </Section>
+
+  <Section id="business" tone="sub" layout="head" intro={t.business.intro} label={t.business.label} heading={t.business.heading}>
+    <ul class="cards">
+      {t.business.items.map((card) => (
+        <li class="card" data-reveal>
+          <figure class="card-figure">
+            <img {...img(card.image)} sizes="(min-width: 1260px) 380px, (min-width: 960px) 33vw, (min-width: 640px) 40vw, 100vw" alt={card.alt} width="1600" height="1067" loading="lazy" />
+          </figure>
+          <div class="card-body">
+            <p class="card-step" lang="en">{t.flow.step} {card.steps}</p>
+            <h3 class="card-title">{card.title}</h3>
+            <p>{card.body}</p>
+          </div>
+        </li>
+      ))}
+    </ul>
+  </Section>
+
+  <Section id="flow" layout="head" intro={t.flow.intro} label={t.flow.label} heading={t.flow.heading}>
+    <ol class="steps">
+      {t.flow.stages.map((s, i) => (
+        <li class="step" data-reveal>
+          <p class="step-no" lang="en"><span>{t.flow.step}</span>{pad(i + 1)}</p>
+          <h3 class="step-title">{s.title}</h3>
+          <p>{s.body}</p>
+        </li>
+      ))}
+    </ol>
+  </Section>
+
+  <Section id="values" tone="sub" label={t.values.label} heading={t.values.heading}>
+    <ul class="value-list">
+      {t.values.items.map((v) => (
+        <li class="value">
+          <h3 class="value-title">{v.title}</h3>
+          <p>{v.body}</p>
+        </li>
+      ))}
+    </ul>
+  </Section>
+
+  <Section id="company" label={t.company.label} heading={t.company.heading}>
+    <dl class="profile">
+      {t.company.rows.map((row) => (
+        <div class="profile-row">
+          <dt>{row.term}</dt>
+          {row.value === null ? (
+            <dd class="pending">{t.company.placeholder}</dd>
+          ) : Array.isArray(row.value) ? (
+            <dd>
+              <ul>
+                {row.value.map((v) => <li>{v}</li>)}
+              </ul>
+            </dd>
+          ) : (
+            <dd>{row.value}</dd>
+          )}
+        </div>
+      ))}
+    </dl>
+  </Section>
+
+  <Section id="access" tone="sub" label={t.access.label} heading={t.access.heading}>
+    <div class="access-body">
+      <address class="access-address">{t.access.address}</address>
+      <ul class="access-stations">
+        {t.access.stations.map((st) => <li>{st}</li>)}
+      </ul>
+      <div class="map" data-map>
+        <p class="map-fallback" aria-hidden="true">{t.access.address}</p>
+        <iframe src={mapEmbed} title={t.access.mapTitle} loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+      </div>
+      <a class="map-link" href={mapLink} target="_blank" rel="noopener">
+        {t.access.openMap}
+        <span class="visually-hidden">{t.access.newTab}</span>
+        <svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true" focusable="false"><path d="M6 3h7v7M13 3 4 12" fill="none" stroke="currentColor" stroke-width="1.5" /></svg>
+      </a>
+    </div>
+  </Section>
+</main>
+
+<footer class="site-footer">
+  <div class="container footer-inner">
+    <div class="footer-brand">
+      <a class="logo logo-footer" href={home}>
+        <span class="logo-mark">AION</span>
+        <span class="logo-name">{t.footer.name}</span>
+      </a>
+      <address class="footer-address">{t.footer.address}</address>
+    </div>
+    <nav class="footer-nav" aria-label={t.footer.sitemap}>
+      <ul>
+        {footerNav.map((item) => (
+          <li><a href={item.href}>{item.label}</a></li>
+        ))}
+      </ul>
+    </nav>
+    <div class="footer-bottom">
+      <LangSwitch lang={lang} class="lang-footer" />
+      <p class="copyright"><small lang="en">© {new Date().getFullYear()} Aion</small></p>
+    </div>
+  </div>
+  <a class="page-top" href="#main" aria-label={t.footer.pageTop}>
+    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
+      <path d="M12 19 V5 M5 12 L12 5 L19 12" fill="none" stroke="currentColor" stroke-width="1.6" />
+    </svg>
+  </a>
+</footer>
+
+<script>
+  import { initSite } from '../scripts/site';
+  initSite();
+</script>
